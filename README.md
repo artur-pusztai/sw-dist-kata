@@ -38,3 +38,11 @@ An Activation Code is valid until the installation of the first package is confi
 After that, the activation code is invalidated.
 
 ## Refactoring Tasks
+
+Improve the tests to such extent that you can confidently start refactoring the code.
+Refactor the code to feel comfortable adding the following feature
+
+## Additional Feature
+
+In the List of packages, add a new Property "ClearedOrders", which is a list of sales orders that
+are allowed to install this package even if their country is not cleared.
