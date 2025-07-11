@@ -1,5 +1,7 @@
 # Refactoring Kata: Software Distribution
 
+This kata is about refactoring a software distribution system in order to introduce a new feature.
+
 ## Requirements Specification
 
 We have a software distribution in place offering public APIs to distribute software to customers.
@@ -21,6 +23,7 @@ for their location. We keep track of apps sold, installed and updated by custome
 - All `registrations` have an `installedVersion`
 - All `registrations` have a `hostGuid` - the unique identifier of the host where the app is installed.
 - All `registrations` have a `lastUpdate` - the date when the registration was last updated.
+- All `registrations` have a `order` field - the sales order which maps back to the sales system.
 
 This is the API for the customer:
 

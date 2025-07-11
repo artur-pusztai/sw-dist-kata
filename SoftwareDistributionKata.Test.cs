@@ -20,7 +20,7 @@ namespace SoftwareDistributionKata
             // upload a new package for App1
             service.AddPackage(new Package("App1", "1.0.0", true, new List<string> { }));
             // prepare an activation code for customer1
-            service.AddRegistration(new Registration("Customer1", "App1", "DE", "ACT123"));
+            service.AddRegistration(new Registration("Customer1", "App1", "DE", "ACT123", "Order1"));
 
             // register customer1 with the activation code must fail as DE is not cleared
             var reg1 = service.Register("host123", "ACT123");
