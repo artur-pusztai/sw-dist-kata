@@ -26,6 +26,7 @@ namespace SoftwareDistributionKata
         public string ActivationCode { get; set; }
         public string InstalledVersion { get; set; }
         public string HostGuid { get; set; }
+        public DateTime LastUpdate { get; set; }
 
         public Registration(string customer, string app, string country, string activationCode, string installedVersion = null)
         {
@@ -34,6 +35,7 @@ namespace SoftwareDistributionKata
             Country = country;
             ActivationCode = activationCode;
             InstalledVersion = installedVersion;
+            LastUpdate = DateTime.Now;
         }
     }
 
@@ -48,7 +50,7 @@ namespace SoftwareDistributionKata
             registrations = new List<Registration>();
         }
 
-        public Package Register(string hostGuid, string activationCode)
+        public Registration Register(string hostGuid, string activationCode)
         {
             // Find the registration by activation code
             Registration registration = null;
@@ -66,62 +68,17 @@ namespace SoftwareDistributionKata
                 throw new InvalidOperationException("Invalid activation code");
             }
 
-            // Check if already registered for this host
-            foreach (var reg in registrations)
+            // Check if activation code is still valid (no package has been installed yet)
+            if (!string.IsNullOrEmpty(registration.InstalledVersion))
             {
-                if (reg.ActivationCode == activationCode && !string.IsNullOrEmpty(reg.InstalledVersion))
-                {
-                    reg.HostGuid = hostGuid; // Update host GUID if not set
-                    return GetIntendedPackage(hostGuid);
-                }
+                throw new InvalidOperationException("Activation code has already been used");
             }
 
-            // Find the latest available package for this app and country
-            Package latestPackage = null;
-            string highestVersion = "0.0.0";
-
-            foreach (var package in packages)
-            {
-                if (package.App == registration.App &&
-                    package.Rollout &&
-                    package.ClearedCountries.Contains(registration.Country))
-                {
-                    // Simple version comparison (assumes semantic versioning)
-                    var currentVersionParts = package.Version.Split('.').Select(int.Parse).ToArray();
-                    var highestVersionParts = highestVersion.Split('.').Select(int.Parse).ToArray();
-
-                    bool isNewer = false;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (currentVersionParts[i] > highestVersionParts[i])
-                        {
-                            isNewer = true;
-                            break;
-                        }
-                        else if (currentVersionParts[i] < highestVersionParts[i])
-                        {
-                            break;
-                        }
-                    }
-
-                    if (isNewer)
-                    {
-                        latestPackage = package;
-                        highestVersion = package.Version;
-                    }
-                }
-            }
-
-            if (latestPackage == null)
-            {
-                throw new InvalidOperationException("No package available for this country");
-            }
-
-            // Update the registration with the installed version and host GUID
-            registration.InstalledVersion = latestPackage.Version;
+            // Set the host GUID and update timestamp
             registration.HostGuid = hostGuid;
+            registration.LastUpdate = DateTime.Now;
 
-            return GetIntendedPackage(hostGuid);
+            return registration;
         }
 
         public Package GetIntendedPackage(string hostGuid)
@@ -144,7 +101,7 @@ namespace SoftwareDistributionKata
 
             // Find the latest available package for this app and country
             Package intendedPackage = null;
-            string highestVersion = "0.0.0";
+            string highestVersion = userRegistration.InstalledVersion ?? "0.0.0";
 
             foreach (var package in packages)
             {
@@ -153,24 +110,7 @@ namespace SoftwareDistributionKata
                     package.ClearedCountries.Contains(userRegistration.Country))
                 {
                     // Simple version comparison (assumes semantic versioning)
-                    var currentVersionParts = package.Version.Split('.').Select(int.Parse).ToArray();
-                    var highestVersionParts = highestVersion.Split('.').Select(int.Parse).ToArray();
-
-                    bool isNewer = false;
-                    for (int i = 0; i < 3; i++)
-                    {
-                        if (currentVersionParts[i] > highestVersionParts[i])
-                        {
-                            isNewer = true;
-                            break;
-                        }
-                        else if (currentVersionParts[i] < highestVersionParts[i])
-                        {
-                            break;
-                        }
-                    }
-
-                    if (isNewer)
+                    if (IsVersionNewer(package.Version, highestVersion))
                     {
                         intendedPackage = package;
                         highestVersion = package.Version;
@@ -186,6 +126,66 @@ namespace SoftwareDistributionKata
             return intendedPackage;
         }
 
+        public Registration ConfirmInstallation(string hostGuid, Package package)
+        {
+            // Find registration by hostGuid
+            Registration userRegistration = null;
+            foreach (var reg in registrations)
+            {
+                if (reg.HostGuid == hostGuid)
+                {
+                    userRegistration = reg;
+                    break;
+                }
+            }
+
+            if (userRegistration == null)
+            {
+                throw new InvalidOperationException("Host not registered");
+            }
+
+            // Verify the package is valid for this user
+            if (package.App != userRegistration.App ||
+                !package.Rollout ||
+                !package.ClearedCountries.Contains(userRegistration.Country))
+            {
+                throw new InvalidOperationException("Package is not valid for this user");
+            }
+
+            // Ensure we're not downgrading
+            if (!string.IsNullOrEmpty(userRegistration.InstalledVersion) &&
+                !IsVersionNewer(package.Version, userRegistration.InstalledVersion))
+            {
+                throw new InvalidOperationException("Cannot install an older version");
+            }
+
+            // Update the registration
+            userRegistration.InstalledVersion = package.Version;
+            userRegistration.LastUpdate = DateTime.Now;
+
+            return userRegistration;
+        }
+
+        private bool IsVersionNewer(string version1, string version2)
+        {
+            var version1Parts = version1.Split('.').Select(int.Parse).ToArray();
+            var version2Parts = version2.Split('.').Select(int.Parse).ToArray();
+
+            for (int i = 0; i < Math.Min(version1Parts.Length, version2Parts.Length); i++)
+            {
+                if (version1Parts[i] > version2Parts[i])
+                {
+                    return true;
+                }
+                else if (version1Parts[i] < version2Parts[i])
+                {
+                    return false;
+                }
+            }
+
+            return version1Parts.Length > version2Parts.Length;
+        }
+
         internal void AddPackage(Package package)
         {
             packages.Add(package);
@@ -195,6 +195,5 @@ namespace SoftwareDistributionKata
         {
             registrations.Add(registration);
         }
-
     }
 }
