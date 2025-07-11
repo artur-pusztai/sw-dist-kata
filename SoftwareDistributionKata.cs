@@ -110,7 +110,7 @@ namespace SoftwareDistributionKata
                     package.ClearedCountries.Contains(userRegistration.Country))
                 {
                     // Simple version comparison (assumes semantic versioning)
-                    if (IsVersionNewer(package.Version, highestVersion))
+                    if (IsVersionNewerOrSame(package.Version, highestVersion))
                     {
                         intendedPackage = package;
                         highestVersion = package.Version;
@@ -152,13 +152,6 @@ namespace SoftwareDistributionKata
                 throw new InvalidOperationException("Package is not valid for this user");
             }
 
-            // Ensure we're not downgrading
-            if (!string.IsNullOrEmpty(userRegistration.InstalledVersion) &&
-                !IsVersionNewer(package.Version, userRegistration.InstalledVersion))
-            {
-                throw new InvalidOperationException("Cannot install an older version");
-            }
-
             // Update the registration
             userRegistration.InstalledVersion = package.Version;
             userRegistration.LastUpdate = DateTime.Now;
@@ -166,14 +159,14 @@ namespace SoftwareDistributionKata
             return userRegistration;
         }
 
-        private bool IsVersionNewer(string version1, string version2)
+        private bool IsVersionNewerOrSame(string version1, string version2)
         {
             var version1Parts = version1.Split('.').Select(int.Parse).ToArray();
             var version2Parts = version2.Split('.').Select(int.Parse).ToArray();
 
             for (int i = 0; i < Math.Min(version1Parts.Length, version2Parts.Length); i++)
             {
-                if (version1Parts[i] > version2Parts[i])
+                if (version1Parts[i] >= version2Parts[i])
                 {
                     return true;
                 }
@@ -183,12 +176,24 @@ namespace SoftwareDistributionKata
                 }
             }
 
-            return version1Parts.Length > version2Parts.Length;
+            return version1Parts.Length >= version2Parts.Length;
         }
 
         internal void AddPackage(Package package)
         {
             packages.Add(package);
+        }
+
+        internal void UpdatePackage(Package package)
+        {
+            // Find the existing package to update
+            var existingPackage = packages.FirstOrDefault(p => p.App == package.App && p.Version == package.Version);
+            if (existingPackage != null)
+            {
+                // Update the existing package
+                existingPackage.Rollout = package.Rollout;
+                existingPackage.ClearedCountries = package.ClearedCountries;
+            }
         }
 
         public void AddRegistration(Registration registration)

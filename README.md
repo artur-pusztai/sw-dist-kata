@@ -33,3 +33,5 @@ The GetIntendedPackage must never return a package older that the customer has c
 
 An Activation Code is valid until the installation of the first package is confirmed.
 After that, the activation code is invalidated.
+
+## Refactoring Tasks
