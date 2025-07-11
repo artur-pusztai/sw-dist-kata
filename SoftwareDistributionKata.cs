@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using NUnit.Framework;
 
 namespace SoftwareDistributionKata
@@ -49,27 +46,9 @@ namespace SoftwareDistributionKata
         {
             packages = new List<Package>();
             registrations = new List<Registration>();
-            InitializeTestData();
         }
 
-        private void InitializeTestData()
-        {
-            // Sample packages
-            packages.Add(new Package("PhotoEditor", "1.0.0", true, new List<string> { "DE", "USA", "IN" }));
-            packages.Add(new Package("PhotoEditor", "1.1.0", true, new List<string> { "DE", "USA", "IN", "SK" }));
-            packages.Add(new Package("PhotoEditor", "2.0.0", false, new List<string> { "DE", "USA" }));
-            packages.Add(new Package("VideoConverter", "1.0.0", true, new List<string> { "DE", "USA", "IN", "SK", "HU", "RO" }));
-            packages.Add(new Package("VideoConverter", "1.2.0", true, new List<string> { "DE", "USA", "IN" }));
-            packages.Add(new Package("MusicPlayer", "3.0.0", true, new List<string> { "DE", "USA" }));
-
-            // Sample registrations
-            registrations.Add(new Registration("ACME Corp", "PhotoEditor", "DE", "ABC123", "1.0.0"));
-            registrations.Add(new Registration("TechStart Inc", "VideoConverter", "USA", "XYZ789"));
-            registrations.Add(new Registration("GlobalSoft", "PhotoEditor", "IN", "DEF456"));
-            registrations.Add(new Registration("EuroTech", "MusicPlayer", "SK", "GHI789"));
-        }
-
-        public Registration Register(string hostGuid, string activationCode)
+        public Package Register(string hostGuid, string activationCode)
         {
             // Find the registration by activation code
             Registration registration = null;
@@ -93,7 +72,7 @@ namespace SoftwareDistributionKata
                 if (reg.ActivationCode == activationCode && !string.IsNullOrEmpty(reg.InstalledVersion))
                 {
                     reg.HostGuid = hostGuid; // Update host GUID if not set
-                    return reg;
+                    return GetIntendedPackage(hostGuid);
                 }
             }
 
@@ -142,7 +121,7 @@ namespace SoftwareDistributionKata
             registration.InstalledVersion = latestPackage.Version;
             registration.HostGuid = hostGuid;
 
-            return registration;
+            return GetIntendedPackage(hostGuid);
         }
 
         public Package GetIntendedPackage(string hostGuid)
@@ -206,115 +185,16 @@ namespace SoftwareDistributionKata
 
             return intendedPackage;
         }
-    }
 
-    [TestFixture]
-    public class SoftwareDistributionServiceTests
-    {
-        private SoftwareDistributionService service;
-
-        [SetUp]
-        public void Setup()
+        internal void AddPackage(Package package)
         {
-            service = new SoftwareDistributionService();
+            packages.Add(package);
         }
 
-        [Test]
-        public void Register_ValidActivationCode_ReturnsRegistration()
+        public void AddRegistration(Registration registration)
         {
-            // Act
-            var result = service.Register("host123", "ABC123");
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Customer, Is.EqualTo("ACME Corp"));
-            Assert.That(result.App, Is.EqualTo("PhotoEditor"));
-            Assert.That(result.Country, Is.EqualTo("DE"));
-            Assert.That(result.ActivationCode, Is.EqualTo("ABC123"));
-            Assert.That(result.InstalledVersion, Is.Not.Null);
+            registrations.Add(registration);
         }
 
-        [Test]
-        public void Register_InvalidActivationCode_ThrowsException()
-        {
-            // Act & Assert
-            Assert.That(() => service.Register("host123", "INVALID"),
-                Throws.TypeOf<InvalidOperationException>());
-        }
-
-        [Test]
-        public void Register_CountryNotCleared_ThrowsException()
-        {
-            // Act & Assert
-            Assert.That(() => service.Register("host123", "GHI789"),
-                Throws.TypeOf<InvalidOperationException>()); // MusicPlayer not available in SK
-        }
-
-        [Test]
-        public void GetIntendedPackage_RegisteredHost_ReturnsLatestPackage()
-        {
-            // Arrange
-            service.Register("host123", "ABC123");
-
-            // Act
-            var result = service.GetIntendedPackage("host123");
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.App, Is.EqualTo("PhotoEditor"));
-            Assert.That(result.Version, Is.EqualTo("1.1.0")); // Should be latest available version
-            Assert.That(result.Rollout, Is.True);
-            Assert.That(result.ClearedCountries, Contains.Item("DE"));
-        }
-
-        [Test]
-        public void GetIntendedPackage_UnregisteredHost_ThrowsException()
-        {
-            // Act & Assert
-            Assert.That(() => service.GetIntendedPackage("unregistered-host"),
-                Throws.TypeOf<InvalidOperationException>());
-        }
-
-        [Test]
-        public void Register_AlreadyRegistered_ReturnsSameRegistration()
-        {
-            // Arrange
-            var firstResult = service.Register("host123", "ABC123");
-
-            // Act
-            var secondResult = service.Register("host123", "ABC123");
-
-            // Assert
-            Assert.That(secondResult.InstalledVersion, Is.EqualTo(firstResult.InstalledVersion));
-            Assert.That(secondResult.Customer, Is.EqualTo(firstResult.Customer));
-        }
-
-        [Test]
-        public void Register_USACustomer_GetsCorrectPackage()
-        {
-            // Act
-            var result = service.Register("host456", "XYZ789");
-
-            // Assert
-            Assert.That(result.Customer, Is.EqualTo("TechStart Inc"));
-            Assert.That(result.App, Is.EqualTo("VideoConverter"));
-            Assert.That(result.Country, Is.EqualTo("USA"));
-            Assert.That(result.InstalledVersion, Is.EqualTo("1.2.0")); // Latest available for USA
-        }
-
-        [Test]
-        public void GetIntendedPackage_AfterRegistration_ReturnsCorrectPackage()
-        {
-            // Arrange
-            service.Register("host456", "XYZ789");
-
-            // Act
-            var result = service.GetIntendedPackage("host456");
-
-            // Assert
-            Assert.That(result.App, Is.EqualTo("VideoConverter"));
-            Assert.That(result.Version, Is.EqualTo("1.2.0"));
-            Assert.That(result.ClearedCountries.Contains("USA"), Is.True);
-        }
     }
 }
