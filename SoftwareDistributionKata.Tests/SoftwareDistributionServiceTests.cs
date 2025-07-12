@@ -1,7 +1,7 @@
-using System.Security.Cryptography;
 using NUnit.Framework;
+using SoftwareDistributionKata.Core;
 
-namespace SoftwareDistributionKata
+namespace SoftwareDistributionKata.Tests
 {
     [TestFixture]
     public class SoftwareDistributionServiceTests

@@ -1,6 +1,4 @@
-using NUnit.Framework;
-
-namespace SoftwareDistributionKata
+namespace SoftwareDistributionKata.Core
 {
     public class Package
     {
@@ -24,9 +22,9 @@ namespace SoftwareDistributionKata
         public string App { get; set; }
         public string Country { get; set; }
         public string ActivationCode { get; set; }
-        public string InstalledVersion { get; set; }
-        public string HostGuid { get; set; }
-        public DateTime LastUpdate { get; set; }
+        public string? InstalledVersion { get; set; }
+        public string? HostGuid { get; set; }
+        public DateTime? LastUpdate { get; set; }
         public string Order { get; set; } // New field for sales order
 
         public Registration(string customer, string app, string country, string activationCode, string order)
@@ -54,7 +52,7 @@ namespace SoftwareDistributionKata
         public Registration Register(string hostGuid, string activationCode)
         {
             // Find the registration by activation code
-            Registration registration = null;
+            Registration? registration = null;
             foreach (var reg in registrations)
             {
                 if (reg.ActivationCode == activationCode)
@@ -85,7 +83,7 @@ namespace SoftwareDistributionKata
         public Package GetIntendedPackage(string hostGuid)
         {
             // Find registration by hostGuid
-            Registration userRegistration = null;
+            Registration? userRegistration = null;
             foreach (var reg in registrations)
             {
                 if (reg.HostGuid == hostGuid)
@@ -101,7 +99,7 @@ namespace SoftwareDistributionKata
             }
 
             // Find the latest available package for this app and country
-            Package intendedPackage = null;
+            Package? intendedPackage = null;
             string highestVersion = userRegistration.InstalledVersion ?? "0.0.0";
 
             foreach (var package in packages)
@@ -130,7 +128,7 @@ namespace SoftwareDistributionKata
         public Registration ConfirmInstallation(string hostGuid, Package package)
         {
             // Find registration by hostGuid
-            Registration userRegistration = null;
+            Registration? userRegistration = null;
             foreach (var reg in registrations)
             {
                 if (reg.HostGuid == hostGuid)
@@ -180,12 +178,12 @@ namespace SoftwareDistributionKata
             return version1Parts.Length >= version2Parts.Length;
         }
 
-        internal void AddPackage(Package package)
+        public void AddPackage(Package package)
         {
             packages.Add(package);
         }
 
-        internal void UpdatePackage(Package package)
+        public void UpdatePackage(Package package)
         {
             // Find the existing package to update
             var existingPackage = packages.FirstOrDefault(p => p.App == package.App && p.Version == package.Version);
