@@ -29,7 +29,7 @@ reportgenerator -reports:"SoftwareDistributionKata.Tests\TestResults\*\coverage.
 .\CoverageReport\index.html
 ```
 
-The start to implement good unit tests one by one. If you use CoPilot, you can start with this prompt:
+Then start to implement good unit tests one by one. If you use CoPilot, you can start with this prompt:
 
 ```prompt
 I want good unit tests, so I can safely start refactoring this code.
@@ -73,18 +73,20 @@ The GetIntendedPackage must never return a package older that the customer has c
 An Activation Code is valid until the installation of the first package is confirmed.
 After that, the activation code is invalidated.
 
-Packages are uploaded to the system using a web interface, not part of this exercise.
+Not shown in the exercise, but important to know:
 
-There is a sync with the sales database every 24 hours, which extends the registrations with the newly sold apps.
-
-There is another sync with Regulatory Affairs every 24 hours, which updates the packages with the latest cleared countries.
+- Packages are uploaded to the system using a web API from their release pipelines.
+- There is a sync with the sales database every 24 hours, which extends the registrations with the newly sold apps.  
+  Sales send the activation code to the customers.
+- There is another sync with the Regulatory Affairs database every 24 hours,  
+  which updates each package with the latest cleared countries.
 
 ## Refactoring Tasks
 
-Improve the tests to such extent that you can confidently start refactoring the code.
-Refactor the code to feel comfortable adding the following feature
+1. Improve the tests to such extent that you can confidently start refactoring the code.
+2. Refactor the code to feel comfortable adding the first of the following features.
 
-## Additional Features
+## Feature Tasks
 
 1. Sales arranged with Regulatory Affairs that some packages can be delivered
    to some countries before the country is cleared.  
