@@ -1,6 +1,42 @@
 # Refactoring Kata: Software Distribution
 
-This kata is about refactoring a software distribution system in order to introduce a new feature.
+This kata is about refactoring a software distribution system, in order to introduce a new feature.
+It is inspired from a real-world scenario where a software distribution service is used
+to manage the distribution of applications to customers.
+
+It is recommended to use visual studio code with the C# extension for this kata.
+The workspace is already set up to recommend the necessary extensions.  
+
+Please use ensemble programming to perform this exercise.  
+If you have it available, please **use GitHub Copilot as driver**. The Ensemble members shall only take the role of navigators.
+
+Clone the respository and install the recommended extensions in Visual Studio Code.
+
+Spend ~10 minutes to read the requirements specification, the code and the tests. Run the tests to make sure they are passing.
+Also check code coverage.
+
+```shell
+# Run tests with coverage
+dotnet test SoftwareDistributionKata.sln --collect:"XPlat Code Coverage"
+
+# Install ReportGenerator if not already installed
+dotnet tool install -g dotnet-reportgenerator-globaltool --add-source https://api.nuget.org/v3/index.json
+
+# Generate HTML report
+reportgenerator -reports:"SoftwareDistributionKata.Tests\TestResults\*\coverage.cobertura.xml" -targetdir:"CoverageReport" -reporttypes:Html
+
+# View the report in a web browser. Normally, you can just 'invoke' the file:
+.\CoverageReport\index.html
+```
+
+The start to implement good unit tests one by one. If you use CoPilot, you can start with this prompt:
+
+```prompt
+I want good unit tests, so I can safely start refactoring this code.
+Please let me keep control and guide you to implement small tests one after another.
+Please start with a first test, that shall ensure that Registering succeeds if the activation code is valid,
+and the package is cleared for the customers country.
+```
 
 ## Requirements Specification
 
@@ -47,17 +83,6 @@ There is another sync with Regulatory Affairs every 24 hours, which updates the 
 
 Improve the tests to such extent that you can confidently start refactoring the code.
 Refactor the code to feel comfortable adding the following feature
-
-```shell
-# Run tests with coverage
-dotnet test SoftwareDistributionKata.sln --collect:"XPlat Code Coverage"
-
-# Generate HTML report
-reportgenerator -reports:"SoftwareDistributionKata.Tests\TestResults\*\coverage.cobertura.xml" -targetdir:"CoverageReport" -reporttypes:Html
-
-# View the report
-# Open CoverageReport\index.html in a browser
-```
 
 ## Additional Features
 
