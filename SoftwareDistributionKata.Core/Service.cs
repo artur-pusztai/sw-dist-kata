@@ -1,49 +1,14 @@
+using System.Runtime.CompilerServices;
+// Allow test project access to internals
+[assembly: InternalsVisibleTo("SoftwareDistributionKata.Tests")]
 namespace SoftwareDistributionKata.Core
 {
-    public class Package
-    {
-        public string App { get; set; }
-        public string Version { get; set; }
-        public bool Rollout { get; set; }
-        public List<string> ClearedCountries { get; set; }
-
-        public Package(string app, string version, bool rollout, List<string> clearedCountries)
-        {
-            App = app;
-            Version = version;
-            Rollout = rollout;
-            ClearedCountries = clearedCountries ?? new List<string>();
-        }
-    }
-
-    public class Registration
-    {
-        public string Customer { get; set; }
-        public string App { get; set; }
-        public string Country { get; set; }
-        public string ActivationCode { get; set; }
-        public string? InstalledVersion { get; set; }
-        public string? HostGuid { get; set; }
-        public DateTime? LastUpdate { get; set; }
-        public string Order { get; set; } // New field for sales order
-
-        public Registration(string customer, string app, string country, string activationCode, string order)
-        {
-            Customer = customer;
-            App = app;
-            Country = country;
-            ActivationCode = activationCode;
-            Order = order;
-            LastUpdate = DateTime.Now;
-        }
-    }
-
-    public class SoftwareDistributionService
+    public class Service
     {
         private List<Package> packages;
         private List<Registration> registrations;
 
-        public SoftwareDistributionService()
+        public Service()
         {
             packages = new List<Package>();
             registrations = new List<Registration>();
@@ -158,14 +123,14 @@ namespace SoftwareDistributionKata.Core
             return userRegistration;
         }
 
-        private bool IsVersionNewerOrSame(string version1, string version2)
+        internal bool IsVersionNewerOrSame(string version1, string version2)
         {
             var version1Parts = version1.Split('.').Select(int.Parse).ToArray();
             var version2Parts = version2.Split('.').Select(int.Parse).ToArray();
 
             for (int i = 0; i < Math.Min(version1Parts.Length, version2Parts.Length); i++)
             {
-                if (version1Parts[i] >= version2Parts[i])
+                if (version1Parts[i] > version2Parts[i])
                 {
                     return true;
                 }

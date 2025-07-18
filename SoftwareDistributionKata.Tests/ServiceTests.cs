@@ -4,14 +4,14 @@ using SoftwareDistributionKata.Core;
 namespace SoftwareDistributionKata.Tests
 {
     [TestFixture]
-    public class SoftwareDistributionServiceTests
+    public class ServiceTests
     {
-        private SoftwareDistributionService service;
+        private Service service;
 
         [SetUp]
         public void Setup()
         {
-            service = new SoftwareDistributionService();
+            service = new Service();
         }
 
         [Test]
@@ -75,9 +75,9 @@ namespace SoftwareDistributionKata.Tests
 
             // Remove clearing for DE for already installed package
             service.UpdatePackage(new Package("App1", "1.1.0", true, new List<string> { }));
-            // GetIntendedPackage shall now return the latest cleared package
-            var pkg = service.GetIntendedPackage("host123");
-            Assert.That(pkg.Version, Is.EqualTo("1.0.0"));
+
+            // GetIntendedPackage should throw an exception as there is no package >= the installed one available.
+            Assert.Throws<InvalidOperationException>(() => service.GetIntendedPackage("host123"));
         }
     }
 }

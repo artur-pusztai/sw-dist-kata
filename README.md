@@ -8,9 +8,12 @@ It is recommended to use visual studio code with the C# extension for this kata.
 The workspace is already set up to recommend the necessary extensions.  
 
 Please use ensemble programming to perform this exercise.  
-If you have it available, please **use GitHub Copilot as driver**. The Ensemble members shall only take the role of navigators.
+> If you have it available, please **use GitHub Copilot as driver**.  
+> Use the "Agent" mode with the Model of your choice. Compare Claude Sonnet with GPT.
+> See: [Available Premium Models](https://dev.azure.com/SHS-IT-AlmDev/Customer%20Information/_wiki/wikis/Customer-Information.wiki/1218/GitHub-Copilot-Premium-Models-Overview?anchor=%F0%9F%A7%A0-available-premium-models)
+> The Ensemble members shall only take the role of navigators.
 
-Clone the respository and install the recommended extensions in Visual Studio Code.
+Clone the repository and install the recommended extensions in Visual Studio Code.
 
 Spend ~10 minutes to read the requirements specification, the code and the tests. Run the tests to make sure they are passing.
 Also check code coverage.
