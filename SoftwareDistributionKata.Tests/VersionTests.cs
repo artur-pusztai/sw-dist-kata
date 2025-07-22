@@ -24,7 +24,7 @@ namespace SoftwareDistributionKata.Tests
         [TestCase("1.13.0", "1.2.0", true)]
         public void IsVersionNewerOrSame_Parametrized(string version1, string version2, bool expected)
         {
-            var result = service.IsVersionNewerOrSame(version1, version2);
+            var result = Service.IsVersionNewerOrSame(version1, version2);
             Assert.That(result, Is.EqualTo(expected));
         }
     }

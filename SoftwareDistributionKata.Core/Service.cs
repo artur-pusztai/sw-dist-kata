@@ -5,113 +5,66 @@ namespace SoftwareDistributionKata.Core
 {
     public class Service
     {
-        private List<Package> packages;
-        private List<Registration> registrations;
+        private readonly List<Package> packages;
+        private readonly List<Registration> registrations;
 
         public Service()
         {
-            packages = new List<Package>();
-            registrations = new List<Registration>();
+            packages = [];
+            registrations = [];
         }
 
         public Registration Register(string hostGuid, string activationCode)
         {
-            // Find the registration by activation code
-            Registration? registration = null;
-            foreach (var reg in registrations)
-            {
-                if (reg.ActivationCode == activationCode)
-                {
-                    registration = reg;
-                    break;
-                }
-            }
-
-            if (registration == null)
-            {
-                throw new InvalidOperationException("Invalid activation code");
-            }
-
-            // Check if activation code is still valid (no package has been installed yet)
-            if (!string.IsNullOrEmpty(registration.InstalledVersion))
-            {
+            Registration registration = registrations.FirstOrDefault(reg => reg.ActivationCode == activationCode)
+                ?? throw new InvalidOperationException("Invalid activation code");
+            if (IsInstalled(registration))
                 throw new InvalidOperationException("Activation code has already been used");
-            }
-
-            // Set the host GUID and update timestamp
             registration.HostGuid = hostGuid;
             registration.LastUpdate = DateTime.Now;
-
             return registration;
+        }
+
+        private static bool IsInstalled(Registration registration)
+        {
+            return !string.IsNullOrEmpty(registration.InstalledVersion);
         }
 
         public Package GetIntendedPackage(string hostGuid)
         {
             // Find registration by hostGuid
-            Registration? userRegistration = null;
-            foreach (var reg in registrations)
-            {
-                if (reg.HostGuid == hostGuid)
-                {
-                    userRegistration = reg;
-                    break;
-                }
-            }
-
-            if (userRegistration == null)
-            {
-                throw new InvalidOperationException("Host not registered");
-            }
+            Registration? userRegistration = registrations.FirstOrDefault(reg => reg.HostGuid == hostGuid) ?? throw new InvalidOperationException("Host not registered");
 
             // Find the latest available package for this app and country
             Package? intendedPackage = null;
+            var allowedPackages = packages.Where(package => IsUserAllowedToInstallPackage(userRegistration, package)).ToList();
             string highestVersion = userRegistration.InstalledVersion ?? "0.0.0";
-
-            foreach (var package in packages)
+            foreach (var package in allowedPackages)
             {
-                if (package.App == userRegistration.App &&
-                    package.Rollout &&
-                    package.ClearedCountries.Contains(userRegistration.Country))
+                if (IsVersionNewerOrSame(package.Version, highestVersion))
                 {
-                    // Simple version comparison (assumes semantic versioning)
-                    if (IsVersionNewerOrSame(package.Version, highestVersion))
-                    {
-                        intendedPackage = package;
-                        highestVersion = package.Version;
-                    }
+                    intendedPackage = package;
+                    highestVersion = package.Version;
                 }
             }
 
-            if (intendedPackage == null)
-            {
-                throw new InvalidOperationException("No package available for this user");
-            }
+            return intendedPackage ?? throw new InvalidOperationException("No package available for this user");
+        }
 
-            return intendedPackage;
+        private static bool IsUserAllowedToInstallPackage(Registration userRegistration, Package package)
+        {
+            return package.App == userRegistration.App &&
+                   package.Rollout &&
+                   package.ClearedCountries.Contains(userRegistration.Country);
         }
 
         public Registration ConfirmInstallation(string hostGuid, Package package)
         {
             // Find registration by hostGuid
-            Registration? userRegistration = null;
-            foreach (var reg in registrations)
-            {
-                if (reg.HostGuid == hostGuid)
-                {
-                    userRegistration = reg;
-                    break;
-                }
-            }
-
-            if (userRegistration == null)
-            {
-                throw new InvalidOperationException("Host not registered");
-            }
+            Registration? userRegistration = registrations.FirstOrDefault(reg => reg.HostGuid == hostGuid) ?? throw new InvalidOperationException("Host not registered");
 
             // Verify the package is valid for this user
-            if (package.App != userRegistration.App ||
-                !package.Rollout ||
-                !package.ClearedCountries.Contains(userRegistration.Country))
+            if (!IsUserAllowedToInstallPackage(userRegistration, package))
             {
                 throw new InvalidOperationException("Package is not valid for this user");
             }
@@ -123,23 +76,15 @@ namespace SoftwareDistributionKata.Core
             return userRegistration;
         }
 
-        internal bool IsVersionNewerOrSame(string version1, string version2)
+        internal static bool IsVersionNewerOrSame(string version1, string version2)
         {
             var version1Parts = version1.Split('.').Select(int.Parse).ToArray();
             var version2Parts = version2.Split('.').Select(int.Parse).ToArray();
-
             for (int i = 0; i < Math.Min(version1Parts.Length, version2Parts.Length); i++)
             {
-                if (version1Parts[i] > version2Parts[i])
-                {
-                    return true;
-                }
-                else if (version1Parts[i] < version2Parts[i])
-                {
-                    return false;
-                }
+                if (version1Parts[i] > version2Parts[i]) return true;
+                if (version1Parts[i] < version2Parts[i]) return false;
             }
-
             return version1Parts.Length >= version2Parts.Length;
         }
 
