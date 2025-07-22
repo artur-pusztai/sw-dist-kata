@@ -55,7 +55,8 @@ namespace SoftwareDistributionKata.Core
         {
             return package.App == userRegistration.App &&
                    package.Rollout &&
-                   package.ClearedCountries.Contains(userRegistration.Country);
+                   (package.ClearedCountries.Contains(userRegistration.Country) ||
+                   package.ApprovedOrders.Contains(userRegistration.Order));
         }
 
         public Registration ConfirmInstallation(string hostGuid, Package package)

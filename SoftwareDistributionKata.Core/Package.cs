@@ -6,5 +6,6 @@ public class Package(string app, string version, bool rollout, List<string> clea
     public string Version { get; set; } = version;
     public bool Rollout { get; set; } = rollout;
     public List<string> ClearedCountries { get; set; } = clearedCountries ?? [];
+    public List<string> ApprovedOrders { get; set; } = [];
 }
 

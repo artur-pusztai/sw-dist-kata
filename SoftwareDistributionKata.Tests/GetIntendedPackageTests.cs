@@ -114,4 +114,32 @@ public class GetIntendedPackageTests
         );
         Assert.That(ex.Message, Is.EqualTo("Host not registered"));
     }
+
+
+    [Test]
+    public void IfNoPackageClearedForCountryButOrderIsApproved_ReturnsHighestApprovedPackage()
+    {
+        // Arrange
+        var registration = new Registration(CustomerName, AppName, Country, ActivationCode, OrderNumber)
+        {
+            HostGuid = HostGuid
+        };
+        _service.AddRegistration(registration);
+
+        // No package is cleared for the registration's country
+        var package1 = new Package(AppName, "1.0.0", rollout: true, clearedCountries: new List<string> { OtherCountry });
+        var package2 = new Package(AppName, "2.0.0", rollout: true, clearedCountries: new List<string> { OtherCountry });
+        // Simulate that package2 is approved for this order
+        package2.ApprovedOrders = new List<string> { OrderNumber };
+        _service.AddPackage(package1);
+        _service.AddPackage(package2);
+
+        // Act
+        var result = _service.GetIntendedPackage(HostGuid);
+
+        // Assert
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Version, Is.EqualTo("2.0.0"));
+        Assert.That(result.ApprovedOrders, Does.Contain(OrderNumber));
+    }
 }
